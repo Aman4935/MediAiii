@@ -1,17 +1,30 @@
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
+  service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
 });
 
+transporter.verify((error) => {
+  if (error) {
+    console.error("SMTP Verify Error:", error);
+  } else {
+    console.log("✅ SMTP Server Ready");
+  }
+});
+
 const sendMail = async ({ to, subject, html }) => {
   try {
+    console.log("=================================");
+    console.log("📧 Sending Mail");
+    console.log("FROM :", process.env.EMAIL_USER);
+    console.log("TO   :", to);
+    console.log("SUBJECT :", subject);
+    console.log("=================================");
+
     const info = await transporter.sendMail({
       from: `"MediAI" <${process.env.EMAIL_USER}>`,
       to,
@@ -20,11 +33,16 @@ const sendMail = async ({ to, subject, html }) => {
     });
 
     console.log("✅ Email Sent Successfully");
-    console.log("Message ID:", info.messageId);
+    console.log("Accepted :", info.accepted);
+    console.log("Rejected :", info.rejected);
+    console.log("Response :", info.response);
+    console.log("MessageID:", info.messageId);
 
     return info;
   } catch (error) {
-    console.error("❌ Email Error:", error);
+    console.log("============== ERROR ==============");
+    console.log(error);
+    console.log("===================================");
     throw error;
   }
 };

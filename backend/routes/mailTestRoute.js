@@ -1,29 +1,50 @@
-const express = require("express");
-const router = express.Router();
+const nodemailer = require("nodemailer");
 
-const sendMail = require("../config/mailer");
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
-router.get("/test", async (req, res) => {
-  try {
-    await sendMail({
-      to: process.env.EMAIL_USER,
-      subject: "🎉 MediAI Email Test",
-      html: `
-        <h2>Email Working Successfully 🚀</h2>
-        <p>If you're reading this, Nodemailer is configured correctly.</p>
-      `,
-    });
-
-    res.status(200).json({
-      success: true,
-      message: "Test email sent successfully.",
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+// Verify SMTP on server start
+transporter.verify((error) => {
+  if (error) {
+    console.error("❌ SMTP Verify Error:", error);
+  } else {
+    console.log("✅ SMTP Server Ready");
   }
 });
 
-module.exports = router;
+const sendMail = async ({ to, subject, html }) => {
+  try {
+    const info = await transporter.sendMail({
+      from: `"MediAI" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      html,
+    });
+
+    console.log("================================");
+    console.log("✅ Email Sent Successfully");
+    console.log("To        :", to);
+    console.log("Subject   :", subject);
+    console.log("Accepted  :", info.accepted);
+    console.log("Rejected  :", info.rejected);
+    console.log("Message ID:", info.messageId);
+    console.log("Response  :", info.response);
+    console.log("================================");
+
+    return info;
+  } catch (error) {
+    console.error("================================");
+    console.error("❌ Email Sending Failed");
+    console.error(error);
+    console.error("================================");
+
+    throw error;
+  }
+};
+
+module.exports = sendMail;
