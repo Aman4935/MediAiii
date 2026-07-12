@@ -13,6 +13,11 @@ const appointmentSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    specialization: {
+  type: String,
+  required: true,
+  trim: true,
+},
 
     appointmentDate: {
       type: String,

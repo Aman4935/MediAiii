@@ -2,30 +2,41 @@ const Appointment = require("../models/Appointment");
 const User = require("../models/User");
 const sendMail = require("../config/mailer");
 
+// ===============================
 // Book Appointment
+// ===============================
+
 const bookAppointment = async (req, res) => {
   try {
     const {
       doctorName,
+      specialization,
       appointmentDate,
       appointmentTime,
       problem,
     } = req.body;
 
-    // Get logged-in user
     const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
     const appointment = await Appointment.create({
       patient: req.user.id,
       doctorName,
+      specialization,
       appointmentDate,
       appointmentTime,
       problem,
     });
 
-    // ===========================
+    // ===============================
     // Email to Patient
-    // ===========================
+    // ===============================
 
     await sendMail({
       to: user.email,
@@ -33,7 +44,7 @@ const bookAppointment = async (req, res) => {
       html: `
       <div style="font-family:Arial;padding:30px;background:#f5f7fb">
 
-        <div style="max-width:600px;margin:auto;background:white;border-radius:15px;overflow:hidden">
+        <div style="max-width:600px;margin:auto;background:#fff;border-radius:15px;overflow:hidden">
 
           <div style="background:#2563eb;color:white;padding:25px;text-align:center">
 
@@ -51,20 +62,19 @@ const bookAppointment = async (req, res) => {
 
             <hr>
 
-            <p><b>Doctor:</b> ${doctorName}</p>
+            <p><strong>Doctor:</strong> ${doctorName}</p>
 
-            <p><b>Date:</b> ${appointmentDate}</p>
+            <p><strong>Specialization:</strong> ${specialization}</p>
 
-            <p><b>Time:</b> ${appointmentTime}</p>
+            <p><strong>Date:</strong> ${appointmentDate}</p>
 
-            <p><b>Problem:</b> ${problem}</p>
+            <p><strong>Time:</strong> ${appointmentTime}</p>
+
+            <p><strong>Problem:</strong> ${problem}</p>
 
             <hr>
 
-            <p>
-              Thank you for choosing
-              <strong>MediAI</strong>.
-            </p>
+            <p>Thank you for choosing <strong>MediAI</strong>.</p>
 
           </div>
 
@@ -74,9 +84,9 @@ const bookAppointment = async (req, res) => {
       `,
     });
 
-    // ===========================
+    // ===============================
     // Email to Admin
-    // ===========================
+    // ===============================
 
     await sendMail({
       to: process.env.EMAIL_USER,
@@ -84,17 +94,19 @@ const bookAppointment = async (req, res) => {
       html: `
       <h2>New Appointment</h2>
 
-      <p><b>Patient:</b> ${user.fullName}</p>
+      <p><strong>Patient:</strong> ${user.fullName}</p>
 
-      <p><b>Email:</b> ${user.email}</p>
+      <p><strong>Email:</strong> ${user.email}</p>
 
-      <p><b>Doctor:</b> ${doctorName}</p>
+      <p><strong>Doctor:</strong> ${doctorName}</p>
 
-      <p><b>Date:</b> ${appointmentDate}</p>
+      <p><strong>Specialization:</strong> ${specialization}</p>
 
-      <p><b>Time:</b> ${appointmentTime}</p>
+      <p><strong>Date:</strong> ${appointmentDate}</p>
 
-      <p><b>Problem:</b> ${problem}</p>
+      <p><strong>Time:</strong> ${appointmentTime}</p>
+
+      <p><strong>Problem:</strong> ${problem}</p>
       `,
     });
 
@@ -116,38 +128,39 @@ const bookAppointment = async (req, res) => {
   }
 };
 
+// ===============================
 // Get My Appointments
+// ===============================
+
 const getAppointments = async (req, res) => {
+  try {
 
-    try {
+    const appointments = await Appointment.find({
+      patient: req.user.id,
+    }).sort({ createdAt: -1 });
 
-        const appointments = await Appointment.find({
+    res.status(200).json({
+      success: true,
+      appointments,
+    });
 
-            patient: req.user.id
+  } catch (error) {
 
-        });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
 
-        res.json({
-
-            success: true,
-            appointments
-
-        });
-
-    } catch (error) {
-
-        res.status(500).json({
-
-            success: false,
-            message: error.message
-
-        });
-
-    }
-
+  }
 };
+
+// ===============================
+// Cancel Appointment
+// ===============================
+
 const cancelAppointment = async (req, res) => {
   try {
+
     const appointment = await Appointment.findOneAndUpdate(
       {
         _id: req.params.id,
@@ -168,9 +181,9 @@ const cancelAppointment = async (req, res) => {
       });
     }
 
-    res.json({
+    res.status(200).json({
       success: true,
-      message: "Appointment cancelled successfully",
+      message: "Appointment Cancelled Successfully",
       appointment,
     });
 
@@ -183,6 +196,11 @@ const cancelAppointment = async (req, res) => {
 
   }
 };
+
+// ===============================
+// Update Appointment Status
+// ===============================
+
 const updateAppointmentStatus = async (req, res) => {
   try {
 
@@ -205,7 +223,7 @@ const updateAppointmentStatus = async (req, res) => {
       });
     }
 
-    res.json({
+    res.status(200).json({
       success: true,
       appointment,
     });
@@ -221,8 +239,8 @@ const updateAppointmentStatus = async (req, res) => {
 };
 
 module.exports = {
-    bookAppointment,
-    getAppointments,
-    cancelAppointment,
-    updateAppointmentStatus,
+  bookAppointment,
+  getAppointments,
+  cancelAppointment,
+  updateAppointmentStatus,
 };
