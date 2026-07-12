@@ -34,97 +34,90 @@ const bookAppointment = async (req, res) => {
       problem,
     });
 
-    // ===============================
-    // Email to Patient
-    // ===============================
-
-    await sendMail({
-      to: user.email,
-      subject: "❤️ Appointment Confirmed | MediAI",
-      html: `
-      <div style="font-family:Arial;padding:30px;background:#f5f7fb">
-
-        <div style="max-width:600px;margin:auto;background:#fff;border-radius:15px;overflow:hidden">
-
-          <div style="background:#2563eb;color:white;padding:25px;text-align:center">
-
-            <h1>MediAI</h1>
-
-            <h2>Appointment Confirmed ✅</h2>
-
-          </div>
-
-          <div style="padding:30px">
-
-            <h3>Hello ${user.fullName},</h3>
-
-            <p>Your appointment has been booked successfully.</p>
-
-            <hr>
-
-            <p><strong>Doctor:</strong> ${doctorName}</p>
-
-            <p><strong>Specialization:</strong> ${specialization}</p>
-
-            <p><strong>Date:</strong> ${appointmentDate}</p>
-
-            <p><strong>Time:</strong> ${appointmentTime}</p>
-
-            <p><strong>Problem:</strong> ${problem}</p>
-
-            <hr>
-
-            <p>Thank you for choosing <strong>MediAI</strong>.</p>
-
-          </div>
-
-        </div>
-
-      </div>
-      `,
-    });
-
-    // ===============================
-    // Email to Admin
-    // ===============================
-
-    await sendMail({
-      to: process.env.EMAIL_USER,
-      subject: "📅 New Appointment Booked",
-      html: `
-      <h2>New Appointment</h2>
-
-      <p><strong>Patient:</strong> ${user.fullName}</p>
-
-      <p><strong>Email:</strong> ${user.email}</p>
-
-      <p><strong>Doctor:</strong> ${doctorName}</p>
-
-      <p><strong>Specialization:</strong> ${specialization}</p>
-
-      <p><strong>Date:</strong> ${appointmentDate}</p>
-
-      <p><strong>Time:</strong> ${appointmentTime}</p>
-
-      <p><strong>Problem:</strong> ${problem}</p>
-      `,
-    });
-
+    // Return response immediately
     res.status(201).json({
       success: true,
       message: "Appointment Booked Successfully",
       appointment,
     });
 
-  } catch (error) {
+    // Send emails in background
+    (async () => {
+      try {
+        // ===============================
+        // Email to Patient
+        // ===============================
 
+        await sendMail({
+          to: user.email,
+          subject: "❤️ Appointment Confirmed | MediAI",
+          html: `
+          <div style="font-family:Arial;padding:30px;background:#f5f7fb">
+            <div style="max-width:600px;margin:auto;background:#fff;border-radius:15px;overflow:hidden">
+              <div style="background:#2563eb;color:white;padding:25px;text-align:center">
+                <h1>MediAI</h1>
+                <h2>Appointment Confirmed ✅</h2>
+              </div>
+
+              <div style="padding:30px">
+                <h3>Hello ${user.fullName},</h3>
+
+                <p>Your appointment has been booked successfully.</p>
+
+                <hr>
+
+                <p><strong>Doctor:</strong> ${doctorName}</p>
+                <p><strong>Specialization:</strong> ${specialization}</p>
+                <p><strong>Date:</strong> ${appointmentDate}</p>
+                <p><strong>Time:</strong> ${appointmentTime}</p>
+                <p><strong>Problem:</strong> ${problem}</p>
+
+                <hr>
+
+                <p>
+                  Thank you for choosing
+                  <strong>MediAI</strong>.
+                </p>
+              </div>
+            </div>
+          </div>
+          `,
+        });
+
+        // ===============================
+        // Email to Admin
+        // ===============================
+
+        await sendMail({
+          to: process.env.EMAIL_USER,
+          subject: "📅 New Appointment Booked",
+          html: `
+          <h2>New Appointment</h2>
+
+          <p><strong>Patient:</strong> ${user.fullName}</p>
+          <p><strong>Email:</strong> ${user.email}</p>
+
+          <p><strong>Doctor:</strong> ${doctorName}</p>
+          <p><strong>Specialization:</strong> ${specialization}</p>
+
+          <p><strong>Date:</strong> ${appointmentDate}</p>
+          <p><strong>Time:</strong> ${appointmentTime}</p>
+          <p><strong>Problem:</strong> ${problem}</p>
+          `,
+        });
+
+        console.log("✅ Emails sent successfully");
+      } catch (err) {
+        console.error("❌ Email Error:", err.message);
+      }
+    })();
+  } catch (error) {
     console.log(error);
 
     res.status(500).json({
       success: false,
       message: error.message,
     });
-
   }
 };
 
@@ -134,7 +127,6 @@ const bookAppointment = async (req, res) => {
 
 const getAppointments = async (req, res) => {
   try {
-
     const appointments = await Appointment.find({
       patient: req.user.id,
     }).sort({ createdAt: -1 });
@@ -143,14 +135,11 @@ const getAppointments = async (req, res) => {
       success: true,
       appointments,
     });
-
   } catch (error) {
-
     res.status(500).json({
       success: false,
       message: error.message,
     });
-
   }
 };
 
@@ -160,7 +149,6 @@ const getAppointments = async (req, res) => {
 
 const cancelAppointment = async (req, res) => {
   try {
-
     const appointment = await Appointment.findOneAndUpdate(
       {
         _id: req.params.id,
@@ -186,14 +174,11 @@ const cancelAppointment = async (req, res) => {
       message: "Appointment Cancelled Successfully",
       appointment,
     });
-
   } catch (error) {
-
     res.status(500).json({
       success: false,
       message: error.message,
     });
-
   }
 };
 
@@ -203,7 +188,6 @@ const cancelAppointment = async (req, res) => {
 
 const updateAppointmentStatus = async (req, res) => {
   try {
-
     const { status } = req.body;
 
     const appointment = await Appointment.findByIdAndUpdate(
@@ -227,14 +211,11 @@ const updateAppointmentStatus = async (req, res) => {
       success: true,
       appointment,
     });
-
   } catch (error) {
-
     res.status(500).json({
       success: false,
       message: error.message,
     });
-
   }
 };
 
