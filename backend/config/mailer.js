@@ -8,14 +8,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-transporter.verify((error) => {
-  if (error) {
-    console.error("SMTP Verify Error:", error);
-  } else {
-    console.log("✅ SMTP Server Ready");
-  }
-});
-
 const sendMail = async ({ to, subject, html }) => {
   try {
     console.log("=================================");
