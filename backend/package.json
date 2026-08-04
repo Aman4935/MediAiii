@@ -3,15 +3,19 @@
   "version": "1.0.0",
   "description": "AI Healthcare Platform Backend",
   "main": "server.js",
+  "type": "commonjs",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
-  "keywords": [],
   "author": "Aman Singh",
   "license": "ISC",
+  "engines": {
+    "node": "22.x"
+  },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@vercel/node": "^5.9.5",
     "axios": "^1.18.1",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.10.0",
